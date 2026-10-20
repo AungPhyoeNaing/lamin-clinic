@@ -66,7 +66,7 @@ describe('same-origin Supabase transport', () => {
       .toBe(`${window.location.origin}/clinic-api/storage/v1/object/public/article-media/test.mp4`)
   })
 
-  it('places fixed upstream rewrites before SPA routing and disables proxy caching', () => {
+  it('places fixed upstream rewrites before SPA routing and keeps private API data uncached', () => {
     for (const service of ['auth', 'rest', 'storage']) {
       const route = routing.rewrites.find(item => item.source === `/clinic-api/${service}/v1/:path*`)
       expect(route).toBeDefined()
@@ -74,8 +74,23 @@ describe('same-origin Supabase transport', () => {
       expect(new URL(route!.destination).pathname).toBe(`/${service}/v1/:path*`)
     }
     expect(routing.rewrites.at(-1)?.destination).toBe('/index.html')
-    const headers = routing.headers.find(item => item.source === '/clinic-api/:path*')?.headers
+    const rule = routing.headers.find(item => item.source.startsWith('/clinic-api/:path('))!
+    const privatePath = new RegExp(`^${rule.source.replace(':path', '')}$`)
+    for (const path of ['/clinic-api/rest/v1/visits', '/clinic-api/auth/v1/user', '/clinic-api/storage/v1/object/article-media/file.webp']) {
+      expect(privatePath.test(path)).toBe(true)
+    }
+    expect(privatePath.test('/clinic-api/storage/v1/object/public/article-media/file.webp')).toBe(false)
+    const headers = rule.headers
     expect(headers).toContainEqual({ key: 'x-vercel-enable-rewrite-caching', value: '0' })
     expect(headers).toContainEqual({ key: 'Cache-Control', value: 'no-store' })
+  })
+
+  it('caches only public media in browsers and versioned static assets long-term', () => {
+    const media = routing.headers.find(item => item.source === '/clinic-api/storage/v1/object/public/article-media/:path*')!
+    expect(media.headers).toContainEqual({ key: 'Cache-Control', value: 'public, max-age=3600' })
+    expect(media.headers).toContainEqual({ key: 'Vercel-CDN-Cache-Control', value: 'no-store' })
+    expect(routing.headers.find(item => item.source === '/assets/:path*')?.headers)
+      .toContainEqual({ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' })
+    expect(routing.headers.some(item => item.source === '/index.html' || item.source === '/sw.js')).toBe(false)
   })
 })

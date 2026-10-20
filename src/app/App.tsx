@@ -1,14 +1,16 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './providers'
 import { useText } from '../lib/i18n'
-import AppShell from './AppShell'
-import LedgerScreen from '../features/ledger/LedgerScreen'
-import ReportsScreen from '../features/reports/ReportsScreen'
-import SettingsScreen from '../features/settings/SettingsScreen'
-import LoginScreen from '../features/auth/LoginScreen'
 import FeedScreen from '../features/feed/FeedScreen'
-import ArticleScreen from '../features/feed/ArticleScreen'
-import ComposerScreen from '../features/feed/ComposerScreen'
+
+const AppShell = lazy(() => import('./AppShell'))
+const LedgerScreen = lazy(() => import('../features/ledger/LedgerScreen'))
+const ReportsScreen = lazy(() => import('../features/reports/ReportsScreen'))
+const SettingsScreen = lazy(() => import('../features/settings/SettingsScreen'))
+const LoginScreen = lazy(() => import('../features/auth/LoginScreen'))
+const ArticleScreen = lazy(() => import('../features/feed/ArticleScreen'))
+const ComposerScreen = lazy(() => import('../features/feed/ComposerScreen'))
 
 function SplashScreen() {
   const label = useText('loading')
@@ -37,6 +39,7 @@ function RequireAuth() {
 export default function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<SplashScreen />}>
       <Routes>
         <Route path="/" element={<FeedScreen />} />
         <Route path="/posts/:id" element={<ArticleScreen />} />
@@ -54,6 +57,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

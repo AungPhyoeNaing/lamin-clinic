@@ -3,6 +3,17 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createSupabaseRepository } from './supabase-repo'
 
 describe('cloud visit repository', () => {
+  it('stops at the reported count without an extra empty request, even with a smaller server page cap', async () => {
+    const rows = Array.from({ length: 503 }, (_, id) => ({ id: String(id) }))
+    const range = vi.fn(async (from: number) => ({ data: rows.slice(from, from + 200), count: from === 0 ? rows.length : null, error: null }))
+    const query = { select: vi.fn(), gte: vi.fn(), lte: vi.fn(), order: vi.fn(), range }
+    for (const method of [query.select, query.gte, query.lte, query.order]) method.mockReturnValue(query)
+    const client = { from: vi.fn(() => query) } as unknown as SupabaseClient
+    expect(await createSupabaseRepository(client).listByDateRange('2026-10-01', '2026-10-31')).toEqual(rows)
+    expect(range).toHaveBeenCalledTimes(3)
+    expect(query.select).toHaveBeenNthCalledWith(1, '*', { count: 'exact' })
+    expect(query.select).toHaveBeenNthCalledWith(2, '*', undefined)
+  })
   it('exports every page even when the server cap is smaller than the requested page', async () => {
     const rows = Array.from({ length: 1203 }, (_, id) => ({ id: String(id) }))
     const range = vi.fn(async (from: number) => ({ data: rows.slice(from, from + 200), error: null }))

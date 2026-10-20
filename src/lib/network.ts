@@ -21,6 +21,13 @@ export const clinicFetch: typeof fetch = async (input, init) => {
   const method = init?.method ?? (input instanceof Request ? input.method : 'GET')
   const timeout = url.includes('/storage/v1/object/') && /^(POST|PUT)$/i.test(method) ? 90000 : 15000
   try {
-    return await withTimeout(fetch(input, { ...init, signal: controller.signal }), timeout, () => controller.abort())
+    return await withTimeout((async () => {
+      const response = await fetch(input, { ...init, signal: controller.signal })
+      // Fetch settles at the headers. Keep the deadline active while JSON arrives,
+      // so a stalled body cannot leave sign-in or a data screen loading forever.
+      if (!response.headers.get('content-type')?.includes('json') || !response.body) return response
+      const body = await response.text()
+      return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers })
+    })(), timeout, () => controller.abort())
   } finally { signal?.removeEventListener('abort', cancel) }
 }

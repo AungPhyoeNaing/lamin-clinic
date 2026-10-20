@@ -6,6 +6,12 @@ import type { Article, ArticleMedia } from '../../data/types'
 import { T } from '../../lib/i18n'
 import { useFeedText } from './feed-copy'
 
+const dateFormats = {
+  en: new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+  my: new Intl.DateTimeFormat('my-MM', { day: 'numeric', month: 'short', year: 'numeric' }),
+}
+const countFormats = { en: new Intl.NumberFormat('en'), my: new Intl.NumberFormat('my') }
+
 export function FeedHeader({ back = false }: { back?: boolean }) {
   const auth = useAuth()
   const { lang, setLang } = useSettings()
@@ -29,8 +35,8 @@ export function ArticleMeta({ article, count }: { article: Article; count?: numb
   const { lang } = useSettings()
   const t = useFeedText()
   return <div className="article-meta">
-    <time dateTime={new Date(article.createdAt).toISOString()}>{new Intl.DateTimeFormat(lang === 'en' ? 'en-GB' : 'my-MM', { day: 'numeric', month: 'short', year: 'numeric' }).format(article.createdAt)}</time>
-    <span><Eye size={15} aria-hidden="true" />{new Intl.NumberFormat(lang === 'en' ? 'en' : 'my').format(count ?? article.viewCount)} {t('views')}</span>
+    <time dateTime={new Date(article.createdAt).toISOString()}>{dateFormats[lang === 'en' ? 'en' : 'my'].format(article.createdAt)}</time>
+    <span><Eye size={15} aria-hidden="true" />{countFormats[lang === 'en' ? 'en' : 'my'].format(count ?? article.viewCount)} {t('views')}</span>
   </div>
 }
 

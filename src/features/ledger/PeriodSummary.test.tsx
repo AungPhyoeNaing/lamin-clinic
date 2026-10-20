@@ -18,6 +18,14 @@ function visit(date: string, fee: number): Visit {
 }
 
 describe('PeriodSummary', () => {
+  it('reuses the loaded range when navigating between days in the same week', async () => {
+    listByDateRange.mockResolvedValue([visit('2026-10-20', 5000)])
+    const { rerender } = render(<PeriodSummary dateKey="2026-10-20" />)
+    await screen.findAllByText('5,000 Ks')
+    rerender(<PeriodSummary dateKey="2026-10-21" />)
+    expect(screen.getAllByText('5,000 Ks')).toHaveLength(2)
+    expect(listByDateRange).toHaveBeenCalledOnce()
+  })
   it('loads across the month boundary and shows separate week and month totals', async () => {
     listByDateRange.mockResolvedValue([
       visit('2026-12-28', 2000), visit('2027-01-01', 5000),

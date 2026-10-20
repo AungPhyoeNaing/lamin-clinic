@@ -45,6 +45,7 @@ export default function LedgerScreen() {
   const ageUnit = useText('ageUnit')
 
   const total = useMemo(() => totalFees(visits), [visits])
+  const visitNumbers = useMemo(() => new Map(visits.map((visit, index) => [visit.id, index + 1])), [visits])
   const isToday = dateKey === todayKey()
 
   const touchStart = useRef<{ x: number; y: number } | null>(null)
@@ -114,7 +115,7 @@ export default function LedgerScreen() {
             <T k="visits" className="text-xs text-white/85" subClassName="block text-[11px] text-white/65" />
           </div>
         </div>
-        <PeriodSummary key={`${dateKey}-${summaryRevision}`} dateKey={dateKey} />
+        <PeriodSummary key={summaryRevision} dateKey={dateKey} />
         {/* Search & Filter Bar */}
         {visits.length > 0 && (
           <div className="relative mt-4">
@@ -245,7 +246,7 @@ export default function LedgerScreen() {
                   <div className="flex min-w-0 items-center gap-3">
                     {/* Patient Queue / Order Avatar */}
                     <div className="visit-number tnum">
-                      {visits.indexOf(visit) + 1}
+                      {visitNumbers.get(visit.id)}
                     </div>
 
                     <div className="min-w-0">

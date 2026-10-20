@@ -11,10 +11,11 @@ export function createSupabaseRepository(
 ): VisitRepository {
   async function listByDateRangeAll(from: string, to: string): Promise<Visit[]> {
     const visits: Visit[] = []
+    let total: number | null = null
     for (;;) {
-      const { data, error } = await client
+      const { data, count, error } = await client
         .from('visits')
-        .select('*')
+        .select('*', visits.length === 0 ? { count: 'exact' } : undefined)
         .gte('date', from)
         .lte('date', to)
         .order('date', { ascending: true })
@@ -24,6 +25,8 @@ export function createSupabaseRepository(
       if (error) throw error
       if (!data?.length) return visits
       visits.push(...data as Visit[])
+      if (total === null && count != null) total = count
+      if (total !== null && visits.length >= total) return visits
     }
   }
 
