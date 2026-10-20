@@ -29,6 +29,7 @@ export default function LoginScreen() {
     } catch (err) {
       const message = err instanceof Error ? err.message : t('loginError').primary.text
       setError(message)
+    } finally {
       setBusy(false)
     }
   }

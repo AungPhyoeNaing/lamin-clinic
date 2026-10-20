@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { CONNECTION_ERROR, withTimeout } from '../lib/network'
 
 export interface AuthUser {
   email: string | null
@@ -15,7 +16,7 @@ export function subscribeAuth(
     const current = ++revision
     if (!user) { callback(null); return }
     try {
-      const { data, error } = await client.rpc('is_staff')
+      const { data, error } = await withTimeout(client.rpc('is_staff'))
       if (current === revision) callback(!error && data === true ? { email: user.email ?? null } : null)
     } catch {
       if (current === revision) callback(null)
@@ -26,7 +27,7 @@ export function subscribeAuth(
     // Defer API calls until the auth callback releases its session lock.
     setTimeout(() => { void update(user) }, 0)
   })
-  client.auth.getSession().then(({ data: { session } }) => {
+  withTimeout(client.auth.getSession()).then(({ data: { session } }) => {
     const user = session?.user ?? null
     void update(user)
   }).catch(() => { if (!disposed) callback(null) })
@@ -34,16 +35,18 @@ export function subscribeAuth(
 }
 
 export async function signIn(client: SupabaseClient, email: string, password: string): Promise<void> {
-  const { error } = await client.auth.signInWithPassword({ email: email.trim(), password })
+  const { error } = await withTimeout(client.auth.signInWithPassword({ email: email.trim(), password }))
   if (error) throw error
-  const { data: allowed, error: accessError } = await client.rpc('is_staff')
-  if (accessError || allowed !== true) {
-    await client.auth.signOut()
+  const { data: allowed, error: accessError } = await withTimeout(client.rpc('is_staff'))
+  // A connection failure must not be reported as a staff-permission rejection.
+  if (accessError) throw new Error(CONNECTION_ERROR)
+  if (allowed !== true) {
+    await withTimeout(client.auth.signOut({ scope: 'local' }))
     throw new Error('Staff access is required. Ask the clinic administrator to approve your account.')
   }
 }
 
 export async function signOut(client: SupabaseClient): Promise<void> {
-  const { error } = await client.auth.signOut()
+  const { error } = await withTimeout(client.auth.signOut())
   if (error) throw error
 }

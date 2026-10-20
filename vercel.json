@@ -1,3 +1,44 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+    "$schema":  "https://openapi.vercel.sh/vercel.json",
+    "rewrites":  [
+                     {
+                         "destination":  "https://hzmzzploocfkccndrvqi.supabase.co/auth/v1/:path*",
+                         "source":  "/clinic-api/auth/v1/:path*"
+                     },
+                     {
+                         "destination":  "https://hzmzzploocfkccndrvqi.supabase.co/rest/v1/:path*",
+                         "source":  "/clinic-api/rest/v1/:path*"
+                     },
+                     {
+                         "destination":  "https://hzmzzploocfkccndrvqi.supabase.co/storage/v1/:path*",
+                         "source":  "/clinic-api/storage/v1/:path*"
+                     },
+                     {
+                         "destination":  "/index.html",
+                         "source":  "/(.*)"
+                     }
+                 ],
+    "headers":  [
+                    {
+                        "headers":  [
+                                        {
+                                            "key":  "Cache-Control",
+                                            "value":  "no-store"
+                                        },
+                                        {
+                                            "key":  "CDN-Cache-Control",
+                                            "value":  "no-store"
+                                        },
+                                        {
+                                            "key":  "Vercel-CDN-Cache-Control",
+                                            "value":  "no-store"
+                                        },
+                                        {
+                                            "key":  "x-vercel-enable-rewrite-caching",
+                                            "value":  "0"
+                                        }
+                                    ],
+                        "source":  "/clinic-api/:path*"
+                    }
+                ]
 }

@@ -94,7 +94,11 @@ npm run dev
 
 ## 3. Production Deployment (Vercel)
 
-The repository already includes `vercel.json` with client-side routing rewrites.
+The repository includes `vercel.json` with client-side routing and a same-origin Supabase proxy. Browser requests to `/clinic-api/auth/v1`, `/clinic-api/rest/v1`, and `/clinic-api/storage/v1` are forwarded by Vercel to the existing Supabase project. Sign-in, staff checks, feed data, view counts, uploads, and generated image/video URLs all use the website domain. Existing accounts, data, RLS policies, and project-specific browser sessions are preserved. Only the public anon key is used; never add a service-role key to Vite variables.
+
+The three external rewrite destinations are pinned to the current project. Keep `VITE_SUPABASE_URL` set to the original Supabase project URL, not the website URL or `/clinic-api`. If you change projects, update all three destinations in `vercel.json` too; the build rejects mismatches. Vite development and preview servers proxy the same paths using the environment URL.
+
+Proxy responses disable browser/CDN caching, and the service worker excludes proxy paths from its HTML navigation fallback. These are external rewrites rather than Vercel Functions, so uploads do not pass through a Function's 4.5 MB payload limit. The app's existing 8 MB photo / 30 MB video limits still apply. Vercel's external proxy timeout is 120 seconds; slow uploads can still time out, and proxy traffic uses the deployment's bandwidth allocation. The app reports stalled connections instead of leaving sign-in loading indefinitely.
 
 ### Deploying via Vercel Dashboard:
 1. Push your repository to GitHub, GitLab, or Bitbucket.
@@ -107,6 +111,8 @@ The repository already includes `vercel.json` with client-side routing rewrites.
    - `VITE_SUPABASE_URL` = `your_supabase_project_url`
    - `VITE_SUPABASE_ANON_KEY` = `your_supabase_anon_key`
 5. Click **Deploy**.
+
+After pushing these changes, redeploy the latest commit (environment-variable changes also require a new build). On both Wi-Fi and mobile data with VPN off, verify the feed and photos/videos load, then sign in as approved staff, publish a test attachment, and delete it. Browser network requests should use your website's `/clinic-api/...` paths; an API response must be JSON, not the SPA HTML. Video seeking should return partial content (`206`) where supported. Regional reachability must be checked on the actual affected networks; a local test cannot confirm it. If an installed PWA shows the older version, close and reopen it after the update, or refresh the website.
 
 ---
 
