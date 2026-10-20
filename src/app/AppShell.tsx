@@ -19,7 +19,7 @@ export default function AppShell() {
       <a href="#main-content" className="skip-link">Skip to content / အကြောင်းအရာသို့</a>
       <header className="clinic-header no-print">
         <div className="flex min-w-0 items-center gap-3">
-          <img src="/logo.svg" width="42" height="42" alt="" className="rounded-2xl" />
+          <img src="/logo-glass.webp" width="42" height="42" alt="" className="rounded-2xl" />
           <div className="min-w-0">
             <T k="appName" className="block text-[16px] font-bold text-ink" subClassName="block text-[11px] font-medium text-muted" />
           </div>

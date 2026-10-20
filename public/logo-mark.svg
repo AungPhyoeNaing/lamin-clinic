@@ -1,6 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
-  <path d="M97 25a53 53 0 1 0 27 86A53 53 0 0 1 97 25Z" fill="#125B50"/>
-  <path d="M69 92c0-25 15-42 43-46 2 28-14 45-43 46Z" fill="#789D72"/>
-  <path d="M68 104c6-17 16-29 31-39" stroke="#125B50" stroke-width="4.5" stroke-linecap="round"/>
-  <circle cx="116" cy="28" r="4" fill="#789D72"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="80 80 352 352" fill="none">
+  <title>La Min Clinic</title>
+  <path d="M294 116a144 144 0 1 0 88 230 132 132 0 0 1-88-230Z" fill="#123F38"/>
+  <path d="M260 280c-6-52 27-94 97-109 10 60-25 105-85 115Z" fill="#75956F"/>
+  <path d="M275 305c32-34 67-39 99-28-20 38-59 50-99 28Z" fill="#B39A5F"/>
+  <path d="M273 266c13-20 29-37 48-50" stroke="#123F38" stroke-width="5" stroke-linecap="round"/>
 </svg>

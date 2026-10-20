@@ -170,7 +170,7 @@ export default function SettingsScreen() {
 
       {/* Clinic Identity Card */}
       <div className="mb-4 flex items-center gap-3.5 rounded-3xl border border-line bg-surface p-4 card-shadow md:p-5">
-        <img src="/logo.svg" alt="" className="h-12 w-12 rounded-2xl shadow-xs" />
+        <img src="/logo-glass.webp" alt="" className="h-12 w-12 rounded-2xl shadow-xs" />
         <div className="min-w-0">
           <T
             k="appName"

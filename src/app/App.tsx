@@ -16,7 +16,7 @@ function SplashScreen() {
   const label = useText('loading')
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4">
-      <img src="/logo.svg" alt="" className="h-16 w-16 rounded-2xl" />
+      <img src="/logo-glass.webp" alt="" className="h-16 w-16 rounded-2xl" />
       <div className="h-1 w-24 overflow-hidden rounded-full bg-line">
         <div className="h-full w-1/2 animate-pulse rounded-full bg-primary" />
       </div>

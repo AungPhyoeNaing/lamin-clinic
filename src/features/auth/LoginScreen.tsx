@@ -40,7 +40,7 @@ export default function LoginScreen() {
         {/* Branding */}
         <div className="flex flex-col items-center text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary shadow-xs">
-            <img src="/logo.svg" alt="" className="h-10 w-10 rounded-xl" />
+            <img src="/logo-glass.webp" alt="" className="h-10 w-10 rounded-xl" />
           </div>
           <T
             k="appName"

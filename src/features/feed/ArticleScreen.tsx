@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil, Share2, Trash2 } from 'lucide-react'
 import { useArticleRepository, useAuth } from '../../app/providers'
@@ -66,7 +66,7 @@ export default function ArticleScreen() {
       {error && <FeedError retry={retry} />}
       {!loading && !error && !article && <div className="knowledge-state"><h1>{t('notFound')}</h1><Link to="/" className="knowledge-secondary">{t('back')}</Link></div>}
       {article && <article className="knowledge-detail">
-        <div className="knowledge-author"><img src="/logo-mark.svg" width="28" height="28" alt="" /><span>{t('team')}</span></div>
+        <div className="knowledge-author"><img src="/logo-glass.webp" width="28" height="28" alt="" /><span>{t('team')}</span></div>
         <h1>{article.title}</h1>
         <ArticleMeta article={article} count={count?.id === id ? count.value : undefined} />
         <div className="knowledge-post-actions"><button type="button" onClick={() => void share()}><Share2 size={18} aria-hidden="true" />{t('share')}</button>{auth.user && <><Link to={`/posts/${encodeURIComponent(id)}/edit`}><Pencil size={17} aria-hidden="true" />{t('edit')}</Link><button type="button" ref={deleteRef} onClick={() => dialogRef.current?.showModal()} aria-label={t('delete')}><Trash2 size={18} aria-hidden="true" /></button></>}</div>

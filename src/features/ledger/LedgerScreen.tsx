@@ -205,7 +205,7 @@ export default function LedgerScreen() {
         {!loading && !error && visits.length === 0 && (
           <div className="empty-ledger">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary shadow-xs">
-              <img src="/logo-mark.svg" alt="" width="44" height="44" />
+              <img src="/logo-glass.webp" alt="" width="44" height="44" />
             </div>
             <T
               k="noVisitsTitle"

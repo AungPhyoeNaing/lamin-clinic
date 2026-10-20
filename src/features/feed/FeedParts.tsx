@@ -18,7 +18,7 @@ export function FeedHeader({ back = false }: { back?: boolean }) {
   const t = useFeedText()
   return <header className="knowledge-header">
     <Link to="/" className="knowledge-brand" aria-label="La Min Clinic">
-      <img src="/logo.svg" alt="" width="40" height="40" />
+      <img src="/logo-glass.webp" alt="" width="40" height="40" />
       <T k="appName" className="font-bold text-sm" subClassName="block text-[11px] font-normal text-muted" />
     </Link>
     <div className="knowledge-header-actions">

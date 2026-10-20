@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowUpRight, BookOpen, Eye, Image, PenLine, Search, X } from 'lucide-react'
 import { useAuth } from '../../app/providers'
@@ -36,12 +36,12 @@ export default function FeedScreen() {
       </section>
       {feed.loading && <div role="status" aria-label={t('loading')}><FeedSkeleton /><FeedSkeleton /></div>}
       {feed.error && <FeedError retry={feed.refresh} />}
-      {!feed.loading && !feed.error && !feed.articles.length && <div className="knowledge-state"><img src="/logo-mark.svg" width="72" height="72" alt="" /><h2>{t(search || kind !== 'all' ? 'noResults' : 'empty')}</h2><p>{t('emptyHint')}</p>{(search || kind !== 'all') && <button type="button" className="knowledge-secondary" onClick={() => setParams({})}>{t('clear')}</button>}</div>}
+      {!feed.loading && !feed.error && !feed.articles.length && <div className="knowledge-state"><img src="/logo-glass.webp" width="72" height="72" alt="" /><h2>{t(search || kind !== 'all' ? 'noResults' : 'empty')}</h2><p>{t('emptyHint')}</p>{(search || kind !== 'all') && <button type="button" className="knowledge-secondary" onClick={() => setParams({})}>{t('clear')}</button>}</div>}
       <div className="knowledge-list" aria-busy={feed.loading}>
         {feed.articles.map(article => <article key={article.id} className="knowledge-card">
           {article.media.length > 0 && <Link to={`/posts/${encodeURIComponent(article.id)}`} aria-label={`${t('read')}: ${article.title}`} className="knowledge-cover-link" tabIndex={-1}><PostMedia item={article.media[0]} cover />{article.media.length > 1 && <span className="knowledge-media-count"><Image size={14} aria-hidden="true" />{article.media.length}</span>}</Link>}
           <div className="knowledge-card-content">
-            <div className="knowledge-author"><img src="/logo-mark.svg" width="24" height="24" alt="" /><span>{t('team')}</span></div>
+            <div className="knowledge-author"><img src="/logo-glass.webp" width="24" height="24" alt="" /><span>{t('team')}</span></div>
             <h2><Link to={`/posts/${encodeURIComponent(article.id)}`}>{article.title}</Link></h2>
             <p className="knowledge-excerpt">{article.body}</p>
             <ArticleMeta article={article} />

@@ -33,7 +33,7 @@ export default defineConfig(({ mode, command }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'logo.svg'],
+        includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'logo-glass.webp'],
         manifest: {
           name: 'La Min Clinic — လမင်း ဆေးခန်း',
           short_name: 'La Min',
@@ -55,7 +55,7 @@ export default defineConfig(({ mode, command }) => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+          globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,woff2}'],
           navigateFallbackDenylist: [/^\/clinic-api(?:\/|$)/],
         },
       }),

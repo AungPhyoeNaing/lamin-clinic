@@ -13,7 +13,7 @@ const copy = {
   noResults: ['No articles match your search.', 'ရှာဖွေမှုနှင့် ကိုက်ညီသော ဆောင်းပါး မရှိပါ။'],
   clear: ['Clear filters', 'ရှာဖွေမှု ရှင်းရန်'], back: ['Back to articles', 'ဆောင်းပါးများသို့'],
   staff: ['Staff', 'ဝန်ထမ်း'], clinic: ['Clinic', 'ဆေးခန်း'], write: ['Write a post', 'ဆောင်းပါး ရေးရန်'],
-  team: ['La Min Clinic team', 'လမင်း ဆေးခန်းအဖွဲ့'], share: ['Share article', 'မျှဝေရန်'], copied: ['Link copied', 'လင့်ခ် ကူးယူပြီးပါပြီ'],
+  team: ['La Min Clinic', 'လမင်းဆေးခန်း'], share: ['Share article', 'မျှဝေရန်'], copied: ['Link copied', 'လင့်ခ် ကူးယူပြီးပါပြီ'],
   copyFailed: ['Couldn’t share. Copy the link from your address bar.', 'မျှဝေ၍ မရပါ။ Browser မှ လင့်ခ်ကို ကူးယူပါ။'],
   notFound: ['This article is no longer available.', 'ဤဆောင်းပါးကို မရနိုင်တော့ပါ။'],
   edit: ['Edit post', 'ဆောင်းပါး ပြင်ရန်'], publish: ['Publish post', 'ဆောင်းပါး တင်ရန်'], save: ['Save changes', 'ပြင်ဆင်ချက် သိမ်းရန်'],
