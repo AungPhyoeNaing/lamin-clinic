@@ -52,7 +52,12 @@ export function useDayVisits(date: string): VisitsState {
 }
 
 export function useMonthVisits(monthKey: string): VisitsState {
+  return useRangeVisits(`${monthKey}-01`, daysOfMonth(monthKey).at(-1)!)
+}
+
+export function useRangeVisits(from: string, to: string): VisitsState {
   const repo = useRepository()
+  const rangeKey = `${from}/${to}`
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [tick, setTick] = useState(0)
 
@@ -61,19 +66,19 @@ export function useMonthVisits(monthKey: string): VisitsState {
   useEffect(() => {
     let cancelled = false
     repo
-      .listByDateRange(`${monthKey}-01`, daysOfMonth(monthKey).at(-1)!)
+      .listByDateRange(from, to)
       .then((visits) => {
-        if (!cancelled) setLoaded({ key: monthKey, visits, error: null })
+        if (!cancelled) setLoaded({ key: rangeKey, visits, error: null })
       })
       .catch((cause: unknown) => {
-        if (!cancelled) setLoaded({ key: monthKey, visits: [], error: toMessage(cause) })
+        if (!cancelled) setLoaded({ key: rangeKey, visits: [], error: toMessage(cause) })
       })
     return () => {
       cancelled = true
     }
-  }, [repo, monthKey, tick])
+  }, [repo, from, to, rangeKey, tick])
 
-  const current = loaded?.key === monthKey ? loaded : null
+  const current = loaded?.key === rangeKey ? loaded : null
   return {
     visits: current?.visits ?? [],
     loading: current === null,

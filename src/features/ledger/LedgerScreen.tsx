@@ -24,6 +24,7 @@ import {
 import { T, useI18n, useText } from '../../lib/i18n'
 import { totalFees } from '../../lib/summary'
 import VisitSheet from './VisitSheet'
+import PeriodSummary from './PeriodSummary'
 import { isDateKey } from '../../data/validation'
 
 export default function LedgerScreen() {
@@ -33,6 +34,7 @@ export default function LedgerScreen() {
     return isDateKey(requested) ? requested : todayKey()
   })
   const { visits, loading, error, refresh } = useDayVisits(dateKey)
+  const [summaryRevision, setSummaryRevision] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [sheet, setSheet] = useState<{ open: boolean; editing: Visit | null }>({
     open: false,
@@ -77,6 +79,7 @@ export default function LedgerScreen() {
   function handleSaved() {
     closeSheet()
     refresh()
+    setSummaryRevision((revision) => revision + 1)
   }
 
   return (
@@ -111,6 +114,7 @@ export default function LedgerScreen() {
             <T k="visits" className="text-xs text-white/85" subClassName="block text-[11px] text-white/65" />
           </div>
         </div>
+        <PeriodSummary key={`${dateKey}-${summaryRevision}`} dateKey={dateKey} />
         {/* Search & Filter Bar */}
         {visits.length > 0 && (
           <div className="relative mt-4">

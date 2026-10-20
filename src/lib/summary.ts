@@ -1,4 +1,28 @@
 import type { Visit } from '../data/types'
+import { addDays, daysOfMonth, fromDateKey } from './format'
+
+export function dashboardPeriods(date: string) {
+  const weekStart = addDays(date, -((fromDateKey(date).getDay() + 6) % 7))
+  const weekEnd = addDays(weekStart, 6)
+  const monthStart = `${date.slice(0, 7)}-01`
+  const monthEnd = daysOfMonth(date.slice(0, 7)).at(-1)!
+  return {
+    weekStart, weekEnd, monthStart, monthEnd,
+    from: weekStart < monthStart ? weekStart : monthStart,
+    to: weekEnd > monthEnd ? weekEnd : monthEnd,
+  }
+}
+
+export function summarizePeriod(visits: Visit[], from: string, to: string) {
+  let income = 0
+  let patients = 0
+  for (const visit of visits) {
+    if (visit.date < from || visit.date > to) continue
+    income += visit.fee
+    patients += 1
+  }
+  return { income, patients }
+}
 
 export interface DaySummary {
   date: string
