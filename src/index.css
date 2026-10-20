@@ -195,9 +195,9 @@
   padding: calc(env(safe-area-inset-top) + 18px) max(20px, env(safe-area-inset-right)) 18px max(20px, env(safe-area-inset-left));
   background: #fff; border-bottom: 1px solid #dce5df;
 }
-.header-feed-link { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #dce5df; border-radius: 50%; color: #225b4c; }
+.header-feed-link { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 8px; border: 1px solid #dce5df; border-radius: 12px; color: #225b4c; }
 .header-feed-link:hover { background: #e8f1eb; }
-.clinic-main { padding-bottom: calc(180px + env(safe-area-inset-bottom)); }
+.clinic-main { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 .clinic-main:focus { outline: none; }
 .screen { padding: 24px 20px 12px; min-width: 0; }
 .screen-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
@@ -256,7 +256,7 @@
 }
 @media (min-width: 768px) {
   .clinic-header { padding: 24px 32px; }
-  .clinic-main { padding-bottom: 110px; }
+  .clinic-main { padding-bottom: 40px; }
   .clinic-bottom-nav { display: none; }
   .screen { padding: 28px 32px; }
   .daily-summary { grid-template-columns: 1fr 140px; padding: 28px; }

@@ -20,15 +20,15 @@ export default function PeriodSummary({ dateKey }: { dateKey: string }) {
           const summary = summarizePeriod(visits, from, to)
           return (
             <section key={key} aria-label={t(title).primary.text} aria-busy={loading} className="min-w-0 rounded-2xl border border-line bg-surface p-4">
-              <h2 className="text-sm font-semibold text-ink"><T k={title} subClassName="ml-2 text-xs font-normal text-muted" /></h2>
-              <p className="mt-1 text-xs text-muted">{formatDateShort(from)} – {formatDateShort(to)}</p>
+              <h2 className="text-sm font-semibold text-ink"><T k={title} subClassName="ml-2 text-sm font-normal text-muted" /></h2>
+              <p className="mt-1 text-sm text-muted">{formatDateShort(from)} – {formatDateShort(to)}</p>
               <dl className="mt-4 space-y-3">
                 <div>
-                  <dt className="flex items-center gap-2 text-xs text-muted"><CircleDollarSign size={15} aria-hidden="true" /><T k={incomeLabel} subClassName="hidden" /></dt>
+                  <dt className="flex items-center gap-2 text-sm text-muted"><CircleDollarSign size={15} aria-hidden="true" /><T k={incomeLabel} subClassName="hidden" /></dt>
                   <dd className="tnum mt-1 break-words text-2xl font-semibold text-primary">{loading || error ? '—' : formatKs(summary.income)}</dd>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
-                  <dt className="flex items-center gap-2 text-xs text-muted"><Users size={15} aria-hidden="true" /><T k={patientsLabel} subClassName="hidden" /></dt>
+                  <dt className="flex items-center gap-2 text-sm text-muted"><Users size={15} aria-hidden="true" /><T k={patientsLabel} subClassName="hidden" /></dt>
                   <dd className="tnum text-xl font-semibold text-ink">{loading || error ? '—' : summary.patients.toLocaleString('en-US')}</dd>
                 </div>
               </dl>
@@ -39,10 +39,10 @@ export default function PeriodSummary({ dateKey }: { dateKey: string }) {
       {error && (
         <div role="alert" className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">
           <span className="min-w-0 break-words">{error}</span>
-          <button type="button" onClick={refresh} className="min-h-11 shrink-0 rounded-xl bg-danger px-3 text-xs font-semibold text-white">{t('retry').primary.text}</button>
+          <button type="button" onClick={refresh} className="min-h-11 shrink-0 rounded-xl bg-danger px-3 text-sm font-semibold text-white">{t('retry').primary.text}</button>
         </div>
       )}
-      <p className="mt-2 text-xs text-muted"><T k="patientCountHint" subClassName="block" /></p>
+      <p className="mt-2 text-sm text-muted"><T k="patientCountHint" subClassName="block" /></p>
     </div>
   )
 }

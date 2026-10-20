@@ -278,6 +278,7 @@ export default function SettingsScreen() {
                   className="text-sm font-semibold text-ink"
                   subClassName="block text-[11px] text-muted"
                 />
+                <p className="mt-1 text-sm text-muted"><T k="backupFileHint" subClassName="hidden" /></p>
               </div>
             </button>
 
@@ -294,6 +295,7 @@ export default function SettingsScreen() {
                   className="text-sm font-semibold text-ink"
                   subClassName="block text-[11px] text-muted"
                 />
+                <p className="mt-1 text-sm text-muted"><T k="restoreFileHint" subClassName="hidden" /></p>
               </div>
             </button>
             <input
@@ -317,6 +319,7 @@ export default function SettingsScreen() {
                   className="text-sm font-semibold text-ink"
                   subClassName="block text-[11px] text-muted"
                 />
+                <p className="mt-1 text-sm text-muted"><T k="excelFileHint" subClassName="hidden" /></p>
               </div>
             </button>
 

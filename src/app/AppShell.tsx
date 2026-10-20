@@ -27,7 +27,7 @@ export default function AppShell() {
         <div className="flex items-center gap-2">
           <SyncBadge />
           <Link to="/" aria-label={feedLabel} title={feedLabel} className="header-feed-link">
-            <ArrowUpRight size={20} aria-hidden="true" />
+            <ArrowUpRight size={20} aria-hidden="true" /><span className="hidden text-sm font-semibold sm:inline"><T k="feed" subClassName="hidden" /></span>
           </Link>
         </div>
       </header>

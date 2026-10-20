@@ -27,17 +27,18 @@ import { totalFees } from '../../lib/summary'
 import VisitSheet from './VisitSheet'
 import PeriodSummary from './PeriodSummary'
 import { isDateKey } from '../../data/validation'
+import './ledger.css'
 
 export default function LedgerScreen() {
-  const [searchParams] = useSearchParams()
-  const [dateKey, setDateKey] = useState(() => {
-    const requested = searchParams.get('date')
-    return isDateKey(requested) ? requested : todayKey()
-  })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requested = searchParams.get('date')
+  const dateKey = isDateKey(requested) ? requested : todayKey()
   const { visits, loading, error, refresh } = useDayVisits(dateKey)
   const [summaryRevision, setSummaryRevision] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteOnly, setDeleteOnly] = useState(false)
+  const [notice, setNotice] = useState<'recordSaved' | 'recordDeleted' | null>(null)
+  const [overviewReady, setOverviewReady] = useState(false)
   const [sheet, setSheet] = useState<{ open: boolean; editing: Visit | null }>({
     open: false,
     editing: null,
@@ -62,17 +63,22 @@ export default function LedgerScreen() {
     )
   }, [visits, searchQuery])
 
-  function changeDay(delta: number) {
-    setDateKey((current) => addDays(current, delta))
+  function selectDay(date: string) {
+    setSearchParams(current => { const next = new URLSearchParams(current); next.set('date', date); return next })
     setSearchQuery('')
+    setNotice(null)
   }
 
+  function changeDay(delta: number) { selectDay(addDays(dateKey, delta)) }
+
   function openAdd() {
+    setNotice(null)
     setDeleteOnly(false)
     setSheet({ open: true, editing: null })
   }
 
   function openEdit(visit: Visit) {
+    setNotice(null)
     setDeleteOnly(false)
     setSheet({ open: true, editing: visit })
   }
@@ -81,17 +87,18 @@ export default function LedgerScreen() {
     setSheet({ open: false, editing: null })
   }
 
-  function handleSaved() {
+  function handleSaved(action: 'saved' | 'deleted') {
     closeSheet()
     refresh()
     setSummaryRevision((revision) => revision + 1)
+    setNotice(action === 'deleted' ? 'recordDeleted' : 'recordSaved')
   }
 
   return (
     <div className="screen ledger-screen">
       <div className="screen-heading">
-        <h1><T k="ledger" subClassName="ml-2 text-sm font-normal text-muted" /></h1>
-        <span className="text-xs text-muted"><T k="city" subClassName="hidden" /></span>
+        <h1><T k="dayRecords" subClassName="block text-sm font-normal text-muted" /></h1>
+        {isToday ? <span className="today-label"><T k="today" subClassName="hidden" /></span> : <button type="button" onClick={() => selectDay(todayKey())} className="back-today"><T k="backToToday" subClassName="hidden" /></button>}
       </div>
 
       <header className="ledger-overview">
@@ -103,36 +110,41 @@ export default function LedgerScreen() {
               <span className="tnum text-base font-bold">{formatDateShort(dateKey)}</span>
             </div>
             <span className="mm block text-center text-xs text-muted">{formatWeekdayMy(dateKey)} · {formatDateMy(dateKey)}</span>
-            <input type="date" value={dateKey} onChange={(event) => { if (isDateKey(event.target.value)) setDateKey(event.target.value) }} aria-label={t('pickDate').primary.text} className="date-picker-input" />
+            <input type="date" value={dateKey} onChange={(event) => { if (isDateKey(event.target.value)) selectDay(event.target.value) }} aria-label={t('pickDate').primary.text} className="date-picker-input" />
           </div>
           <button type="button" onClick={() => changeDay(1)} aria-label={t('nextDay').primary.text} className="date-arrow"><ChevronRight size={20} /></button>
         </div>
         <div className="daily-summary" aria-busy={loading}>
           <div className="daily-summary-main">
-            <div className="flex items-center gap-2 text-sm text-white/85"><CircleDollarSign size={16} aria-hidden="true" /><T k="total" subClassName="ml-2 text-xs text-white/65" /></div>
+            <div className="flex items-center gap-2 text-sm text-white/85"><CircleDollarSign size={16} aria-hidden="true" /><T k="dailyIncome" subClassName="hidden" /></div>
             <div className="daily-total tnum">{loading || error ? '—' : formatKs(total)}</div>
-            <button type="button" onClick={() => setDateKey(todayKey())} disabled={isToday} className="summary-today">{t('today').primary.text}{isToday && <span className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-[#cadfc9]" />}</button>
           </div>
           <div className="daily-count">
             <Users size={19} aria-hidden="true" />
             <span className="tnum text-3xl font-semibold">{loading || error ? '—' : visits.length}</span>
-            <T k="visits" className="text-xs text-white/85" subClassName="block text-[11px] text-white/65" />
+            <T k="selectedDayVisits" className="text-sm text-white/85" subClassName="hidden" />
           </div>
         </div>
-        <PeriodSummary key={summaryRevision} dateKey={dateKey} />
+        <p role="status" aria-live="polite" className="ledger-feedback">{notice && <T k={notice} subClassName="hidden" />}</p>
+        <div className="ledger-tools">
+        <button type="button" onClick={openAdd} className="ledger-add no-print" aria-label={addLabel}>
+          <Plus size={21} aria-hidden="true" /><span>{addLabel}</span>
+        </button>
         {/* Search & Filter Bar */}
         {visits.length > 0 && (
           <div className="relative mt-4">
+            <label htmlFor="day-record-search" className="mb-2 block text-sm font-medium text-ink"><T k="searchDayRecords" subClassName="hidden" /></label>
+            <div className="relative">
             <Search
               size={17}
               className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
             />
             <input
               type="search"
-              aria-label={t('searchPatients').primary.text}
+              id="day-record-search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('searchPlaceholder').primary.text}
+              placeholder={t('searchDayPlaceholder').primary.text}
               className="w-full rounded-2xl border border-line bg-surface py-2.5 pl-10 pr-10 text-sm text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-muted/60"
             />
             {searchQuery && (
@@ -140,13 +152,15 @@ export default function LedgerScreen() {
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted transition hover:bg-bg hover:text-ink"
-                title={t('clearSearch').primary.text}
+                aria-label={t('clearSearch').primary.text}
               >
                 <X size={15} />
               </button>
             )}
+            </div>
           </div>
         )}
+        </div>
       </header>
 
       {/* Swipeable Daily Visits Section */}
@@ -224,10 +238,11 @@ export default function LedgerScreen() {
           <div className="my-8 rounded-2xl border border-line bg-surface p-8 text-center card-shadow">
             <Search size={28} className="mx-auto text-muted/60" />
             <T
-              k="noSearchResults"
+              k="noDayMatches"
               className="mt-3 block text-sm font-semibold text-ink"
               subClassName="hidden"
             />
+            <p className="mt-2 text-sm text-muted"><T k="daySearchHint" subClassName="hidden" /></p>
             <button
               type="button"
               onClick={() => setSearchQuery('')}
@@ -273,13 +288,16 @@ export default function LedgerScreen() {
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
-                    <div className="tnum text-[15px] font-bold text-ink md:text-base">
+                    <div className="text-right"><div className="tnum text-[15px] font-bold text-ink md:text-base">
                       {formatKs(visit.fee)}
                     </div>
+                    <span className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary"><T k="editAction" subClassName="hidden" />
                     <ChevronRightIcon
                       size={16}
                       className="text-muted/40 transition group-hover:translate-x-0.5 group-hover:text-primary"
+                      aria-hidden="true"
                     />
+                    </span></div>
                   </div>
                 </button>
                 <button
@@ -297,21 +315,15 @@ export default function LedgerScreen() {
         )}
       </section>
 
-      {/* Floating Action Button (FAB) */}
-      <button
-        type="button"
-        onClick={openAdd}
-        aria-label={addLabel}
-        title={addLabel}
-        className="add-visit-button no-print"
-      >
-        <Plus size={24} strokeWidth={2.4} />
-        <span className="text-sm font-semibold">{addLabel}</span>
-      </button>
+      <details className="period-overview" onToggle={event => { if (event.currentTarget.open) setOverviewReady(true) }}>
+        <summary><T k="periodOverview" subClassName="block text-sm font-normal text-muted" /></summary>
+        {overviewReady && <PeriodSummary key={summaryRevision} dateKey={dateKey} />}
+      </details>
 
       {/* Visit Edit / Create Bottom Sheet or Modal */}
       {sheet.open && (
         <VisitSheet
+          key={`${dateKey}-${sheet.editing?.id ?? 'new'}-${deleteOnly}`}
           dateKey={dateKey}
           existing={sheet.editing}
           deleteOnly={deleteOnly}

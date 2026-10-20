@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { AlertCircle, Clock, Sparkles, X } from 'lucide-react'
 import { useRepository, useSettings } from '../../app/providers'
 import { useRecentNames } from '../../data/hooks'
 import type { Visit, VisitDraft } from '../../data/types'
-import { addDays, formatAmount, formatKs } from '../../lib/format'
+import { addDays, formatAmount, formatDateMy, formatDateShort, formatKs } from '../../lib/format'
 import { T, useI18n } from '../../lib/i18n'
 import { Field, inputCls } from '../../components/Field'
 
@@ -11,7 +11,7 @@ interface VisitSheetProps {
   dateKey: string
   existing: Visit | null
   onClose: () => void
-  onSaved: () => void
+  onSaved: (action: 'saved' | 'deleted') => void
   deleteOnly?: boolean
 }
 
@@ -35,6 +35,15 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
   const [saving, setSaving] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(deleteOnly)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
+  const initialFee = existing ? String(existing.fee) : defaultFee != null ? String(defaultFee) : ''
+  const dirty = !deleteOnly && (name !== (existing?.patientName ?? '') || age !== (existing?.age != null ? String(existing.age) : '') || diagnosis !== (existing?.diagnosis ?? '') || fee !== initialFee)
+  const requestClose = useCallback(() => {
+    if (saving) return
+    if (confirmingDiscard) setConfirmingDiscard(false)
+    else if (dirty) setConfirmingDiscard(true)
+    else onClose()
+  }, [saving, confirmingDiscard, dirty, onClose])
 
   const sinceDate = useMemo(() => addDays(dateKey, -90), [dateKey])
   const { names } = useRecentNames(sinceDate, !deleteOnly)
@@ -48,6 +57,9 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
   }, [names, name])
 
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const ageInputRef = useRef<HTMLInputElement>(null)
+  const feeInputRef = useRef<HTMLInputElement>(null)
+  const keepEditingRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
 
@@ -57,6 +69,18 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
     else dialogRef.current?.focus()
     return () => previous?.focus()
   }, [])
+
+  useEffect(() => {
+    if (confirmingDiscard) keepEditingRef.current?.focus()
+    else if (window.matchMedia('(pointer: fine)').matches) nameInputRef.current?.focus()
+  }, [confirmingDiscard])
+
+  useEffect(() => {
+    if (!dirty) return
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [dirty])
 
   useEffect(() => {
     const viewport = window.visualViewport
@@ -81,10 +105,10 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !saving) onClose()
+      if (event.key === 'Escape') { event.preventDefault(); requestClose() }
       if (event.key === 'Tab') {
-        const fields = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, textarea, [tabindex="0"]')
-        if (!fields?.length) return
+        const fields = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [tabindex="0"]')
+        if (!fields?.length) { event.preventDefault(); return }
         const first = fields[0]
         const last = fields[fields.length - 1]
         if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) { event.preventDefault(); last.focus() }
@@ -93,7 +117,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose, saving])
+  }, [requestClose])
 
   const quickPresets = useMemo(() => {
     const list = defaultFee != null && !COMMON_FEE_PRESETS.includes(defaultFee)
@@ -104,6 +128,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (saving) return
     const trimmedName = name.trim()
     const parsedAge = age.trim() === '' ? null : Number(age)
     const parsedFee = Number(fee)
@@ -127,7 +152,12 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
     } else {
       setFeeError(null)
     }
-    if (invalid) return
+    if (invalid) {
+      if (!trimmedName) nameInputRef.current?.focus()
+      else if (parsedAge != null && (!Number.isInteger(parsedAge) || parsedAge < 0 || parsedAge > 130)) ageInputRef.current?.focus()
+      else feeInputRef.current?.focus()
+      return
+    }
 
     setSaving(true)
     setSaveError(null)
@@ -140,7 +170,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
         fee: parsedFee,
       }
       await repo.saveVisit(draft, existing ?? undefined)
-      onSaved()
+      onSaved('saved')
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : String(cause))
       setSaving(false)
@@ -157,7 +187,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
     setSaveError(null)
     try {
       await repo.deleteVisit(existing.id)
-      onSaved()
+      onSaved('deleted')
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : String(cause))
       setSaving(false)
@@ -173,7 +203,8 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
       {/* Backdrop */}
       <div
         className="animate-fade-in absolute inset-0 bg-ink/40 backdrop-blur-xs transition-opacity"
-        onClick={() => { if (!saving) onClose() }}
+        onClick={requestClose}
+        aria-hidden="true"
       />
 
       {/* Sheet on mobile, centered modal on desktop */}
@@ -181,8 +212,9 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
         role="dialog"
         ref={dialogRef}
         tabIndex={-1}
-        aria-label={t(deleteOnly ? 'deleteRecord' : existing ? 'editVisit' : 'addVisit').primary.text}
+        aria-label={t(confirmingDiscard ? 'discardTitle' : deleteOnly ? 'deleteRecord' : existing ? 'editVisit' : 'addVisit').primary.text}
         aria-modal="true"
+        aria-busy={saving}
         className="visit-sheet animate-sheet-up md:animate-scale-up"
       >
         {/* Mobile drag handle indicator */}
@@ -192,14 +224,14 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
         <div className="sheet-heading flex items-center justify-between gap-3">
           <div>
             <T
-              k={deleteOnly ? 'deleteRecord' : existing ? 'editVisit' : 'addVisit'}
+              k={confirmingDiscard ? 'discardTitle' : deleteOnly ? 'deleteRecord' : existing ? 'editVisit' : 'addVisit'}
               className="text-lg font-bold tracking-tight text-ink md:text-xl"
-              subClassName="block text-[11px] text-muted"
+              subClassName="block text-sm text-muted"
             />
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             disabled={saving}
             aria-label={t('close').primary.text}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-line bg-surface text-muted transition hover:bg-surface-hover hover:text-ink active:scale-95"
@@ -208,23 +240,37 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
           </button>
         </div>
 
-        {deleteOnly ? (
+        {confirmingDiscard ? (
+          <div className="mt-5 space-y-5">
+            <p className="text-base leading-relaxed text-ink"><T k="discardHint" subClassName="block mt-2 text-sm text-muted" /></p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button ref={keepEditingRef} type="button" onClick={() => setConfirmingDiscard(false)} className="min-h-12 rounded-xl bg-primary px-4 py-3 font-semibold text-white">{t('keepEditing').primary.text}</button>
+              <button type="button" onClick={onClose} className="min-h-12 rounded-xl border border-danger/30 px-4 py-3 font-semibold text-danger">{t('discardChanges').primary.text}</button>
+            </div>
+          </div>
+        ) : deleteOnly ? (
           <div className="mt-5 space-y-4">
             <p className="mm break-words text-lg font-semibold text-ink">{existing?.patientName}</p>
-            <p className="tnum text-sm text-muted">{formatKs(existing?.fee ?? 0)}</p>
+            <p className="tnum text-sm text-muted">{formatDateShort(dateKey)} · {formatKs(existing?.fee ?? 0)}</p>
             <p className="text-sm text-danger"><T k="confirmDelete" subClassName="block mt-1 text-xs" /></p>
             {saveError && <p role="alert" className="break-words rounded-xl bg-danger-soft p-3 text-sm text-danger">{saveError}</p>}
             <div className="flex flex-wrap gap-3">
               <button type="button" disabled={saving} onClick={onClose} className="min-h-11 flex-1 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-semibold disabled:opacity-60">{t('cancel').primary.text}</button>
-              <button type="button" disabled={saving} onClick={() => void handleDelete()} className="min-h-11 flex-1 rounded-xl bg-danger px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">{t(saving ? 'saving' : 'confirmDeleteAction').primary.text}</button>
+              <button type="button" disabled={saving} onClick={() => void handleDelete()} className="min-h-11 flex-1 rounded-xl bg-danger px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">{t(saving ? 'deleting' : 'confirmDeleteAction').primary.text}</button>
             </div>
           </div>
         ) : <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          <fieldset disabled={saving} className="min-w-0 space-y-4">
+          <div className="record-date-note"><T k="recordDate" subClassName="hidden" /><strong>{formatDateShort(dateKey)}</strong><span className="mm">{formatDateMy(dateKey)}</span></div>
+          <p className="text-sm text-muted"><T k="requiredFields" subClassName="hidden" /></p>
           {/* Patient Name with Auto-complete */}
           <div className="relative">
             <Field k="patientName" error={nameError}>
               <input
                 ref={nameInputRef}
+                name="patientName"
+                aria-required="true"
+                aria-invalid={!!nameError}
                 className={inputCls}
                 value={name}
                 placeholder={t('patientPlaceholder').primary.text}
@@ -279,10 +325,14 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
           </div>
 
           {/* Age & Fee Inputs */}
-          <div className="grid grid-cols-3 gap-3">
-            <Field k="age" error={ageError}>
+          <div className="visit-fields-row grid grid-cols-2 gap-3">
+            <Field k="age" error={ageError} optional>
               <input
                 className={`${inputCls} tnum`}
+                ref={ageInputRef}
+                name="age"
+                autoComplete="off"
+                aria-invalid={!!ageError}
                 value={age}
                 inputMode="numeric"
                 placeholder="—"
@@ -293,11 +343,16 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
               />
             </Field>
 
-            <div className="col-span-2">
+            <div>
               <Field k="fee" error={feeError}>
                 <div className="relative">
                   <input
                     className={`${inputCls} tnum pr-14 font-semibold`}
+                    ref={feeInputRef}
+                    name="fee"
+                    autoComplete="off"
+                    aria-required="true"
+                    aria-invalid={!!feeError}
                     value={fee}
                     inputMode="numeric"
                     placeholder="0"
@@ -350,9 +405,11 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
           </div>
 
           {/* Diagnosis / Notes */}
-          <Field k="diagnosis">
+          <Field k="diagnosis" optional>
             <textarea
               className={`${inputCls} resize-none`}
+              name="diagnosis"
+              autoComplete="off"
               rows={2}
               value={diagnosis}
               placeholder={t('diagnosisPlaceholder').primary.text}
@@ -375,7 +432,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
             className="w-full rounded-2xl bg-primary py-3.5 text-white shadow-md shadow-primary/20 transition hover:bg-primary-strong active:scale-95 disabled:opacity-60"
           >
             <T
-              k={saving ? 'saving' : 'save'}
+              k={saving ? 'saving' : 'saveRecord'}
               className="text-[15px] font-bold"
               subClassName="block text-[10px] font-normal text-white/80"
             />
@@ -414,6 +471,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved, delete
               )}
             </div>
           )}
+          </fieldset>
         </form>}
       </div>
     </div>

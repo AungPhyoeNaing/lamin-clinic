@@ -86,7 +86,7 @@ export default function ReportsScreen() {
                 className="flex flex-col items-center rounded-xl px-4 py-1 text-center transition hover:bg-surface"
               >
                 <span className="text-sm font-bold text-ink">{formatMonthEn(monthKey)}</span>
-                <span className="mm text-[11px] leading-tight text-muted">
+                <span className="mm text-sm leading-tight text-muted">
                   {formatMonthMy(monthKey)}
                 </span>
               </button>
@@ -119,55 +119,56 @@ export default function ReportsScreen() {
           <div className="report-metrics mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 md:gap-3">
             <div className="report-metric-total rounded-2xl border border-line/80 bg-surface-soft p-3.5">
               <div className="flex items-center justify-between text-muted">
-                <span className="text-[11px] font-medium">
+                <span className="text-sm font-medium">
                   <T k="monthTotal" subClassName="hidden" />
                 </span>
                 <CircleDollarSign size={16} className="text-primary" />
               </div>
               <div className="tnum mt-1 text-xl font-bold tracking-tight text-primary-strong md:text-2xl">
-                {formatKs(total)}
+                {loading || error ? '—' : formatKs(total)}
               </div>
             </div>
 
             <div className="rounded-2xl border border-line/80 bg-surface-soft p-3.5">
               <div className="flex items-center justify-between text-muted">
-                <span className="text-[11px] font-medium">
-                  <T k="visits" subClassName="hidden" />
+                <span className="text-sm font-medium">
+                  <T k="selectedDayVisits" subClassName="hidden" />
                 </span>
                 <Users size={16} className="text-primary" />
               </div>
               <div className="tnum mt-1 text-xl font-bold tracking-tight text-ink md:text-2xl">
-                {visits.length}
+                {loading || error ? '—' : visits.length}
               </div>
             </div>
 
             <div className="rounded-2xl border border-line/80 bg-surface-soft p-3.5">
               <div className="flex items-center justify-between text-muted">
-                <span className="text-[11px] font-medium">
+                <span className="text-sm font-medium">
                   <T k="activeDays" subClassName="hidden" />
                 </span>
                 <CalendarCheck size={16} className="text-primary" />
               </div>
               <div className="tnum mt-1 text-xl font-bold tracking-tight text-ink md:text-2xl">
-                {byDay.length}
+                {loading || error ? '—' : byDay.length}
               </div>
             </div>
 
             <div className="rounded-2xl border border-line/80 bg-surface-soft p-3.5">
               <div className="flex items-center justify-between text-muted">
-                <span className="text-[11px] font-medium">
+                <span className="text-sm font-medium">
                   <T k="avgPerVisit" subClassName="hidden" />
                 </span>
                 <TrendingUp size={16} className="text-primary" />
               </div>
               <div className="tnum mt-1 text-xl font-bold tracking-tight text-ink md:text-2xl">
-                {formatKs(avg)}
+                {loading || error ? '—' : formatKs(avg)}
               </div>
             </div>
           </div>
 
           {/* Interactive Daily Revenue Chart */}
-          <div className="mt-4 rounded-2xl border border-line/80 bg-surface-soft p-4">
+          {!loading && !error && <details className="report-chart mt-4 rounded-2xl border border-line bg-surface p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-primary"><T k="dailyRevenue" subClassName="hidden" /></summary>
             <div className="flex flex-col items-start gap-2 pb-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-xs font-semibold text-muted">
                 {t('dailyRevenue').primary.text} ({formatMonthEn(monthKey)})
@@ -181,7 +182,8 @@ export default function ReportsScreen() {
               )}
             </div>
 
-            <div className="report-bars flex h-28 items-end gap-[3px] pt-2">
+            <div className="overflow-x-auto pb-2">
+            <div className="report-bars flex h-28 items-end gap-[3px] pt-2" style={{ minWidth: days.length * 32 }}>
               {days.map((day) => {
                 const summary = dayMap.get(day)
                 const height = summary ? Math.max(8, Math.round((summary.total / maxTotal) * 100)) : 0
@@ -201,7 +203,7 @@ export default function ReportsScreen() {
                     className="group relative flex h-full min-w-0 flex-1 flex-col justify-end"
                   >
                     <div
-                      className={`w-full rounded-t-md transition-all duration-150 ${
+                      className={`w-full rounded-t-md transition-colors duration-150 ${
                         summary
                           ? isSelected
                             ? 'bg-primary-strong ring-2 ring-primary/40'
@@ -216,20 +218,22 @@ export default function ReportsScreen() {
                 )
               })}
             </div>
+            </div>
 
             <div className="tnum mt-2.5 flex justify-between border-t border-line/60 pt-2 text-[10px] font-medium text-muted">
-              <span>Day 1</span>
-                <span>Day {Math.round(days.length / 2)}</span>
-              <span>Day {days.length}</span>
+              <span>{t('dayOfMonth').primary.text} 1</span>
+              <span>{t('dayOfMonth').primary.text} {Math.round(days.length / 2)}</span>
+              <span>{t('dayOfMonth').primary.text} {days.length}</span>
             </div>
-          </div>
+          </details>}
 
           {/* Action Export and Print Buttons */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={exportCsv}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface py-3 text-sm font-semibold text-ink shadow-xs transition hover:border-line-strong hover:bg-surface-hover active:scale-95"
+              disabled={loading || !!error}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface px-3 py-3 text-sm font-semibold text-ink transition-colors hover:border-line-strong hover:bg-surface-hover disabled:opacity-50"
             >
               <FileSpreadsheet size={17} className="text-primary" />
               <T k="exportCsv" className="text-sm font-semibold" subClassName="hidden" />
@@ -237,6 +241,7 @@ export default function ReportsScreen() {
             <button
               type="button"
               onClick={() => window.print()}
+              disabled={loading || !!error}
               className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface py-3 text-sm font-semibold text-ink shadow-xs transition hover:border-line-strong hover:bg-surface-hover active:scale-95"
             >
               <Printer size={17} className="text-primary" />
@@ -258,7 +263,7 @@ export default function ReportsScreen() {
             </div>
           )}
 
-          {!loading && byDay.length === 0 && (
+          {!loading && !error && byDay.length === 0 && (
             <div className="rounded-3xl border border-line bg-surface p-10 text-center card-shadow">
               <Calendar size={28} className="mx-auto text-muted/60" />
               <T
@@ -269,7 +274,7 @@ export default function ReportsScreen() {
             </div>
           )}
 
-          {!loading && byDay.length > 0 && (
+          {!loading && !error && byDay.length > 0 && (
             <div className="overflow-hidden rounded-3xl border border-line bg-surface card-shadow">
               <div className="border-b border-line bg-surface-soft px-4 py-3 text-xs font-semibold text-muted">
                 {t('dailyBreakdown').primary.text} ({byDay.length} {t('activeDays').primary.text})
@@ -286,7 +291,7 @@ export default function ReportsScreen() {
                         <span className="tnum text-sm font-bold text-ink">
                           {formatDayShortEn(day.date)}
                         </span>
-                        <span className="rounded-full bg-surface-soft px-2.5 py-0.5 text-[11px] font-medium text-muted border border-line">
+                        <span className="rounded-full bg-surface-soft px-2.5 py-0.5 text-sm font-medium text-muted border border-line">
                           {day.count} {t('entries').primary.text}
                         </span>
                       </div>
