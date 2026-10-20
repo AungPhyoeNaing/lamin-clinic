@@ -36,6 +36,7 @@ export const dict = {
   saving: { my: 'သိမ်းနေသည်...', en: 'Saving...' },
   cancel: { my: 'ပယ်ဖျက်', en: 'Cancel' },
   delete: { my: 'ဖျက်ရန်', en: 'Delete' },
+  deleteRecord: { my: 'မှတ်တမ်း ဖျက်ရန်', en: 'Delete record' },
   confirmDelete: {
     my: 'ဖျက်မှာ သေချာပါသလား? ပြန်ယူလို့ မရပါ',
     en: 'Delete this entry? This cannot be undone',

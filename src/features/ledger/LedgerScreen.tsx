@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   Plus,
   Search,
+  Trash2,
   Users,
   X,
 } from 'lucide-react'
@@ -36,6 +37,7 @@ export default function LedgerScreen() {
   const { visits, loading, error, refresh } = useDayVisits(dateKey)
   const [summaryRevision, setSummaryRevision] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleteOnly, setDeleteOnly] = useState(false)
   const [sheet, setSheet] = useState<{ open: boolean; editing: Visit | null }>({
     open: false,
     editing: null,
@@ -66,10 +68,12 @@ export default function LedgerScreen() {
   }
 
   function openAdd() {
+    setDeleteOnly(false)
     setSheet({ open: true, editing: null })
   }
 
   function openEdit(visit: Visit) {
+    setDeleteOnly(false)
     setSheet({ open: true, editing: visit })
   }
 
@@ -237,11 +241,11 @@ export default function LedgerScreen() {
         {!loading && filteredVisits.length > 0 && (
           <ul className="visit-list">
             {filteredVisits.map((visit) => (
-              <li key={visit.id}>
+              <li key={visit.id} className="flex items-center">
                 <button
                   type="button"
                   onClick={() => openEdit(visit)}
-                  className="visit-row group"
+                  className="visit-row group min-w-0 flex-1"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     {/* Patient Queue / Order Avatar */}
@@ -278,6 +282,15 @@ export default function LedgerScreen() {
                     />
                   </div>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setDeleteOnly(true); setSheet({ open: true, editing: visit }) }}
+                  aria-label={`${t('deleteRecord').primary.text}: ${visit.patientName}`}
+                  title={t('deleteRecord').primary.text}
+                  className="no-print mr-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-danger transition hover:bg-danger-soft"
+                >
+                  <Trash2 size={19} aria-hidden="true" />
+                </button>
               </li>
             ))}
           </ul>
@@ -301,6 +314,7 @@ export default function LedgerScreen() {
         <VisitSheet
           dateKey={dateKey}
           existing={sheet.editing}
+          deleteOnly={deleteOnly}
           onClose={closeSheet}
           onSaved={handleSaved}
         />

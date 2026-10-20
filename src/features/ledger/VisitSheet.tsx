@@ -12,11 +12,12 @@ interface VisitSheetProps {
   existing: Visit | null
   onClose: () => void
   onSaved: () => void
+  deleteOnly?: boolean
 }
 
 const COMMON_FEE_PRESETS = [5000, 10000, 15000, 20000, 30000]
 
-export default function VisitSheet({ dateKey, existing, onClose, onSaved }: VisitSheetProps) {
+export default function VisitSheet({ dateKey, existing, onClose, onSaved, deleteOnly = false }: VisitSheetProps) {
   const repo = useRepository()
   const { defaultFee } = useSettings()
   const t = useI18n()
@@ -32,11 +33,11 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
   const [feeError, setFeeError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(deleteOnly)
   const [showSuggestions, setShowSuggestions] = useState(false)
 
   const sinceDate = useMemo(() => addDays(dateKey, -90), [dateKey])
-  const { names } = useRecentNames(sinceDate)
+  const { names } = useRecentNames(sinceDate, !deleteOnly)
 
   const suggestions = useMemo(() => {
     const query = name.trim().toLowerCase()
@@ -52,7 +53,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null
-    if (window.matchMedia('(pointer: fine)').matches) nameInputRef.current?.focus()
+    if (window.matchMedia('(pointer: fine)').matches && nameInputRef.current) nameInputRef.current.focus()
     else dialogRef.current?.focus()
     return () => previous?.focus()
   }, [])
@@ -147,7 +148,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
   }
 
   async function handleDelete() {
-    if (!existing) return
+    if (!existing || saving) return
     if (!confirmingDelete) {
       setConfirmingDelete(true)
       return
@@ -160,7 +161,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : String(cause))
       setSaving(false)
-      setConfirmingDelete(false)
+      setConfirmingDelete(deleteOnly)
     }
   }
 
@@ -180,7 +181,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
         role="dialog"
         ref={dialogRef}
         tabIndex={-1}
-        aria-label={t(existing ? 'editVisit' : 'addVisit').primary.text}
+        aria-label={t(deleteOnly ? 'deleteRecord' : existing ? 'editVisit' : 'addVisit').primary.text}
         aria-modal="true"
         className="visit-sheet animate-sheet-up md:animate-scale-up"
       >
@@ -191,7 +192,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
         <div className="sheet-heading flex items-center justify-between gap-3">
           <div>
             <T
-              k={existing ? 'editVisit' : 'addVisit'}
+              k={deleteOnly ? 'deleteRecord' : existing ? 'editVisit' : 'addVisit'}
               className="text-lg font-bold tracking-tight text-ink md:text-xl"
               subClassName="block text-[11px] text-muted"
             />
@@ -207,7 +208,18 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        {deleteOnly ? (
+          <div className="mt-5 space-y-4">
+            <p className="mm break-words text-lg font-semibold text-ink">{existing?.patientName}</p>
+            <p className="tnum text-sm text-muted">{formatKs(existing?.fee ?? 0)}</p>
+            <p className="text-sm text-danger"><T k="confirmDelete" subClassName="block mt-1 text-xs" /></p>
+            {saveError && <p role="alert" className="break-words rounded-xl bg-danger-soft p-3 text-sm text-danger">{saveError}</p>}
+            <div className="flex flex-wrap gap-3">
+              <button type="button" disabled={saving} onClick={onClose} className="min-h-11 flex-1 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-semibold disabled:opacity-60">{t('cancel').primary.text}</button>
+              <button type="button" disabled={saving} onClick={() => void handleDelete()} className="min-h-11 flex-1 rounded-xl bg-danger px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">{t(saving ? 'saving' : 'confirmDeleteAction').primary.text}</button>
+            </div>
+          </div>
+        ) : <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           {/* Patient Name with Auto-complete */}
           <div className="relative">
             <Field k="patientName" error={nameError}>
@@ -402,7 +414,7 @@ export default function VisitSheet({ dateKey, existing, onClose, onSaved }: Visi
               )}
             </div>
           )}
-        </form>
+        </form>}
       </div>
     </div>
   )

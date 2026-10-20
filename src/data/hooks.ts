@@ -91,11 +91,12 @@ export interface RecentNamesState {
   names: RecentName[]
 }
 
-export function useRecentNames(sinceDate: string): RecentNamesState {
+export function useRecentNames(sinceDate: string, enabled = true): RecentNamesState {
   const repo = useRepository()
   const [names, setNames] = useState<RecentName[]>([])
 
   useEffect(() => {
+    if (!enabled) return
     let cancelled = false
     repo
       .listRecentNames(sinceDate)
@@ -108,7 +109,7 @@ export function useRecentNames(sinceDate: string): RecentNamesState {
     return () => {
       cancelled = true
     }
-  }, [repo, sinceDate])
+  }, [repo, sinceDate, enabled])
 
   return { names }
 }
